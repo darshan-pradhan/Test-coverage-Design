@@ -1,0 +1,63 @@
+plugins {
+    id 'java-library'
+    id 'info.solidsoft.pitest' version '1.5.2'
+}
+def user = 'week6'
+
+group 'edu.depaul'
+version '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation('org.junit.jupiter:junit-jupiter:5.7.0')
+}
+
+test {
+    useJUnitPlatform()
+
+    afterTest { desc, result ->
+        logger.quiet "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
+    }
+}
+
+task packageDistribution(type: Zip) {
+    dependsOn test
+    archiveFileName = "SE333-${user}-${rootProject.name}.zip"
+    destinationDirectory = file("$buildDir/dist")
+
+    from("$projectDir") {
+        include "src/**/*"
+        include "build.gradle"
+        include "gradlew"
+        include "gradlew.bat"
+        include "settings.gradle"
+    }
+
+    into("${user}-${rootProject.name}")
+}
+
+check {
+    finalizedBy {
+        packageDistribution
+    }
+}
+
+build {
+    dependsOn 'pitest'
+}
+pitest {
+    junit5PluginVersion = "0.12"
+    mutationThreshold = 70
+    timestampedReports = false
+}
+
+
+

@@ -1,0 +1,75 @@
+plugins {
+    id 'java-library'
+    id 'jacoco'
+}
+def user = 'week6'
+
+group 'edu.depaul'
+version '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation('org.junit.jupiter:junit-jupiter:5.7.0')
+}
+
+test {
+    useJUnitPlatform()
+
+    finalizedBy jacocoTestReport
+
+    afterTest { desc, result ->
+        logger.quiet "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
+    }
+}
+
+task packageDistribution(type: Zip) {
+    dependsOn test
+    archiveFileName = "${rootProject.name}.zip"
+    destinationDirectory = file("$buildDir/dist")
+
+    from("$projectDir") {
+        include "src/**/*"
+        include "build.gradle"
+        include "pitest.gradle"
+        include "gradlew"
+        include "gradlew.bat"
+        include "settings.gradle"
+    }
+
+    into("${rootProject.name}")
+}
+
+check {
+    finalizedBy {
+        packageDistribution
+    }
+    dependsOn {
+        jacocoTestCoverageVerification
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+
+
+
